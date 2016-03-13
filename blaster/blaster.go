@@ -6,7 +6,7 @@ import (
 
 // BlastRequest is fired by the blaster.
 type BlastRequest interface {
-	Send(BlastLock)
+	Send()
 }
 
 // RequestFactory builds requests
@@ -33,22 +33,8 @@ type BlastLock interface {
 	Close()
 }
 
-// FireBlast shoots actual logins
-// TODO: make this into a struct
-func FireBlast(factory RequestFactory,
-	count int,
-	after time.Time,
-	interval time.Duration,
-	lock BlastLock) {
-
-	waitDur := after.Sub(time.Now())
-	<-time.After(waitDur)
-
-	ticker := time.Tick(interval)
-	for i := 0; i < count; i++ {
-		req := factory.GetNext()
-		go req.Send(lock)
-		<-ticker
-	}
-
+// Blaster fires off the request
+type Blaster interface {
+	// factory, # of, starttime, request period
+	Fire(RequestFactory, int, time.Time, time.Duration)
 }

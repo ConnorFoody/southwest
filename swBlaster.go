@@ -5,7 +5,8 @@ import (
 	"time"
 )
 
-type swBlaster struct {
+// SWBlaster builds a blast for a southwest checkin
+type SWBlaster struct {
 	// in millieconds
 	blastPeriod int
 
@@ -33,7 +34,7 @@ type swBlaster struct {
 
 // TODO: error checking for all of this
 // SetAccount gives the blaster the form data for checkin
-func (b *swBlaster) SetAccount(firstName, lastName, confirmCode string) {
+func (b *SWBlaster) SetAccount(firstName, lastName, confirmCode string) {
 	b.firstName = firstName
 	b.lastName = lastName
 	b.confirmCode = confirmCode
@@ -42,7 +43,7 @@ func (b *swBlaster) SetAccount(firstName, lastName, confirmCode string) {
 // SetParams for the blast. Period is the time between requests.
 // cover is the ammount of time after the checkin time to send requests.
 // headstart accounts for network latency.
-func (b *swBlaster) SetParams(period, cover, headstart int) {
+func (b *SWBlaster) SetParams(period, cover, headstart int) {
 	b.blastPeriod = period
 	b.cover = cover
 	b.headstart = headstart
@@ -52,40 +53,22 @@ func (b *swBlaster) SetParams(period, cover, headstart int) {
 // SetTime that the blast will start (note that headstart adjusts this)
 // string fmt is <month abriviation> date <time> <pm/am>
 // example input date is: "jan 1 7:15 pm"
-func (b *swBlaster) SetTime(timeStr string) error {
-	targetTime, err := time.Parse("jan 1 7:15 pm", timeStr)
+func (b *SWBlaster) SetTime(timeStr string) error {
+	targetTime, err := time.Parse("Jan 2, 2006 at 3:04pm (PST)", timeStr)
 	b.startTime = targetTime
 	return err
 }
 
 // ScheduleBlast at the provided param times
-func (b *swBlaster) ScheduleBlast(
-	factory blaster.RequestFactory,
-	lock blaster.BlastLock) {
+// NOTE: this doesn't make a lick of sense, neeed to wrap the runner
+// in an interface, the swBlaster is actually the blastBuilder and
+// it helps set up the request factory (maybe it is the request factory?)
+// this
+func (b *SWBlaster) ScheduleBlast(blast blaster.Blaster) {
 
-	runTime := b.startTime.Add(-time.Duration(b.headstart) * time.Millisecond)
-	waitDur := runTime.Sub(time.Now())
+	runTime := b.startTime //.Add(-time.Duration(b.headstart) * time.Millisecond)
 	interval := time.Duration(b.blastPeriod) * time.Millisecond
 
-	// wait until it is time to roll
-	select {
-	case <-time.After(waitDur):
-		break
-	case <-b.closer:
-		return
-	}
-
-	// setup the intervals
-	ticker := time.NewTicker(interval)
-	for i := 0; i < b.cover; i++ {
-		// get a request from the factory and send it out
-		req := factory.GetNext()
-		go req.Send(lock)
-
-		// blocks until it is time for the next itr
-		<-ticker.C
-	}
-
-	// clean up
-	ticker.Stop()
+	factory := swRequestFactory{}
+	blast.Fire(&factory, b.numRequests, runTime, interval)
 }

@@ -13,11 +13,13 @@ func TestSimpleRequest(t *testing.T) {
 	go bl.Run()
 
 	runT := time.Now().Add(50 * time.Millisecond)
-	go blaster.FireBlast(mocks.MakeSimpleFactory(),
+	roundT := runT.Round(time.Duration(1 * time.Second))
+
+	blast := mocks.SimpleBlaster{}
+	go blast.Fire(mocks.MakeSimpleFactory(bl),
 		6,
-		runT,
-		time.Duration(1*time.Millisecond),
-		bl)
+		roundT,
+		time.Duration(100*time.Millisecond))
 
 	time.Sleep(2 * time.Second)
 }

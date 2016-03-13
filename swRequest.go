@@ -9,7 +9,7 @@ type swRequest struct {
 }
 
 // TODO: replace this with a "swLock"
-func (r *swRequest) Send(lock blaster.BlastLock) {
+func (r *swRequest) Send() {
 
 }
 
@@ -17,6 +17,9 @@ type swRequestFactory struct {
 	// TODO: flush out the interaction between this and the swBlaster
 }
 
-func (f *swRequestFactory) GetNext() *swRequest {
+func (f *swRequestFactory) GetNext() blaster.BlastRequest {
 	return &swRequest{}
 }
+
+var _ blaster.BlastRequest = (*swRequest)(nil)
+var _ blaster.RequestFactory = (*swRequestFactory)(nil)
