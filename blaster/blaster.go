@@ -4,30 +4,14 @@ import (
 	"time"
 )
 
-// BlastRequest is a netrequest to be fired by the blaster.
-// Treat this like a Request factory
+// BlastRequest is fired by the blaster.
 type BlastRequest interface {
-	Run(BlastLock)
-	Prep()
+	Send(BlastLock)
 }
 
-// FireBlast shoots actual logins
-func FireBlast(req BlastRequest,
-	count int,
-	after time.Time,
-	interval time.Duration,
-	lock BlastLock) {
-
-	waitDur := after.Sub(time.Now())
-	<-time.After(waitDur)
-
-	ticker := time.Tick(interval)
-	for i := 0; i < count; i++ {
-		req.Prep()
-		go req.Run(lock)
-		<-ticker
-	}
-
+// RequestFactory builds requests
+type RequestFactory interface {
+	GetNext() BlastRequest
 }
 
 // RequestStatus is the status of a request on the chan
@@ -49,48 +33,22 @@ type BlastLock interface {
 	Close()
 }
 
-// OnceBlastLock locks after the first task through
-type OnceBlastLock struct {
-	lock  chan RequestStatus
-	close chan bool
-}
+// FireBlast shoots actual logins
+// TODO: make this into a struct
+func FireBlast(factory RequestFactory,
+	count int,
+	after time.Time,
+	interval time.Duration,
+	lock BlastLock) {
 
-// Run until close is called, put in its own goroutine
-func (bl *OnceBlastLock) Run() {
-	gotFirst := false
-	for {
-		select {
-		case result := <-bl.lock:
-			// if err false
-			if result.Err != nil {
-				go result.Handle(false)
-				continue
-			} // else no err
+	waitDur := after.Sub(time.Now())
+	<-time.After(waitDur)
 
-			// send true if first, else false
-			go result.Handle(!gotFirst)
-			gotFirst = true
-
-		case <-bl.close:
-			// TODO: find a way to do this more cleanly
-			return
-		}
+	ticker := time.Tick(interval)
+	for i := 0; i < count; i++ {
+		req := factory.GetNext()
+		go req.Send(lock)
+		<-ticker
 	}
-}
-
-// GetChan from the bl
-func (bl OnceBlastLock) GetChan() chan RequestStatus {
-	return bl.lock
-}
-
-// Setup used by the bl
-func (bl *OnceBlastLock) Setup(l chan RequestStatus) {
-	bl.lock = l
-	bl.close = make(chan bool)
-}
-
-// Close the blast loc
-func (bl *OnceBlastLock) Close() {
-	close(bl.close)
 
 }
