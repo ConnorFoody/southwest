@@ -69,6 +69,6 @@ func (b *SWBlaster) ScheduleBlast(blast blaster.Blaster) {
 	runTime := b.startTime //.Add(-time.Duration(b.headstart) * time.Millisecond)
 	interval := time.Duration(b.blastPeriod) * time.Millisecond
 
-	factory := swRequestFactory{}
+	factory := swCheckinFactory{}
 	blast.Fire(&factory, b.numRequests, runTime, interval)
 }
