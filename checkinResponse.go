@@ -2,22 +2,34 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"net/http"
-	"strings"
 )
 
+// response for the checkin
 type checkinResponse struct {
-	body   string
 	status int
+	ok     bool
 }
 
 func (cr *checkinResponse) Parse(response *http.Response) {
 	cr.status = response.StatusCode
 
+	cr.ok = false
 	var buff bytes.Buffer
 	buff.ReadFrom(response.Body)
 
-	cr.body = strings.TrimSpace(buff.String())
+	var arbJSON map[string]interface{}
+
+	err := json.Unmarshal(buff.Bytes(), &arbJSON)
+	if err != nil {
+		fmt.Println("err decoding json:", err)
+		return
+	}
+
+	// check that this has flight info
+	cr.ok = arbJSON["output"] != nil
 }
 
 // get the params for the checkin request

@@ -2,21 +2,46 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 )
 
-func TestUserAgent(t *testing.T) {
-	config := makeswConfig()
-	expected := "Southwest/2.10.1 CFNetwork/711.1.16 Darwin/14.0.0"
-
-	if config.userAgentString != expected {
-		t.Errorf("Excpected: %s, got: %s", expected, config.userAgentString)
+func handleTestingError(err error) {
+	if err != nil {
+		panic(err)
 	}
 }
 
-func TestCheckin(t *testing.T) {
+// loadSampleData
+func loadSampleData(name string) string {
+	file, err := os.Open(name)
+	handleTestingError(err)
+	defer file.Close()
+
+	data, err := ioutil.ReadAll(file)
+	handleTestingError(err)
+
+	return string(data)
+}
+
+func buildJSONResponseServer(jsonFile string) *httptest.Server {
+	return httptest.NewServer(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintln(w, loadSampleData(jsonFile))
+		}))
+
+}
+
+func buildTestRequestHandler(url string) swRequestHandler {
+	swr := makeswRequestHandler()
+	swr.config.baseURI = url
+	return swr
+}
+
+func TestFireRequest(t *testing.T) {
 	expected := "hello world!"
 	// start the server
 	ts := httptest.NewServer(
@@ -36,10 +61,8 @@ func TestCheckin(t *testing.T) {
 	if err := swr.fireRequest(&resp, paramStr); err != nil {
 		panic(err)
 	}
-	fmt.Println(resp.body, paramStr)
 
-	if resp.body != expected {
-		t.Errorf("expected: %s got: %s\n", expected, resp.body)
+	if resp.ok {
+		t.Errorf("did not expect to get an OK response!\n")
 	}
-
 }
