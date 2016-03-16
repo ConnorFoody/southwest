@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"net/http/cookiejar"
 	"strings"
 )
 
@@ -62,7 +63,16 @@ type swRequestHandler struct {
 
 func makeswRequestHandler() swRequestHandler {
 	account := makeswAccount("foo", "bar", "123abc")
-	return swRequestHandler{config: makeswConfig(), account: account}
+
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		panic(err)
+	}
+	client := &http.Client{Jar: jar}
+
+	return swRequestHandler{config: makeswConfig(),
+		account: account,
+		client:  client}
 }
 
 // fire off the request
@@ -80,7 +90,7 @@ func (swr *swRequestHandler) fireRequest(
 
 	swr.buildHeader(request)
 
-	httpResp, err := swr.client.Do(req)
+	httpResp, err := swr.client.Do(request)
 	if err != nil {
 		return err
 	}

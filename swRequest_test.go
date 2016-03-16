@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -15,8 +17,29 @@ func TestUserAgent(t *testing.T) {
 }
 
 func TestCheckin(t *testing.T) {
-	swr := makeswRequestHandler()
+	expected := "hello world!"
+	// start the server
+	ts := httptest.NewServer(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintln(w, expected)
+		}))
+	defer ts.Close()
 
-	checkinParams := swr.checkinParams()
-	fmt.Println("params:", swr.paramToBody(checkinParams))
+	swr := makeswRequestHandler()
+	swr.config.baseURI = ts.URL
+
+	params := swr.checkinParams()
+	paramStr := swr.paramToBody(params)
+
+	resp := checkinResponse{}
+
+	if err := swr.fireRequest(&resp, paramStr); err != nil {
+		panic(err)
+	}
+	fmt.Println(resp.body, paramStr)
+
+	if resp.body != expected {
+		t.Errorf("expected: %s got: %s\n", expected, resp.body)
+	}
+
 }

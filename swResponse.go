@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"net/http"
+	"strings"
 )
 
 type checkinResponse struct {
@@ -15,6 +16,8 @@ func (cr *checkinResponse) Parse(response *http.Response) {
 
 	var buff bytes.Buffer
 	buff.ReadFrom(response.Body)
+
+	cr.body = strings.TrimSpace(buff.String())
 }
 
 // get the params for the checkin request
