@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -36,7 +37,8 @@ func buildJSONResponseServer(jsonFile string) *httptest.Server {
 }
 
 func buildTestRequestHandler(url string) swRequestHandler {
-	swr := makeswRequestHandler()
+	account := makeswAccount("foo", "bar", "123abc")
+	swr := makeswRequestHandler(account)
 	swr.config.baseURI = url
 	return swr
 }
@@ -50,7 +52,8 @@ func TestFireRequest(t *testing.T) {
 		}))
 	defer ts.Close()
 
-	swr := makeswRequestHandler()
+	account := makeswAccount("foo", "bar", "123abc")
+	swr := makeswRequestHandler(account)
 	swr.config.baseURI = ts.URL
 
 	params := swr.checkinParams()
@@ -64,5 +67,40 @@ func TestFireRequest(t *testing.T) {
 
 	if resp.ok {
 		t.Errorf("did not expect to get an OK response!\n")
+	}
+}
+
+type testswValidResponse struct {
+}
+
+func (swv *testswValidResponse) Parse(response *http.Response) {
+	var buff bytes.Buffer
+	buff.ReadFrom(response.Body)
+
+	fmt.Println("resp from SW:", buff.String())
+}
+
+// get the params for the checkin request
+func (swr swRequestHandler) testValidParams() map[string]string {
+	ret := swr.baseParams()
+	ret["serviceID"] = "flighcheckin_new"
+	ret["firstName"] = swr.account.FirstName
+	ret["lastName"] = swr.account.LastName
+	ret["recordLocator"] = swr.account.RecordLocator
+	return ret
+}
+
+func TestSWEndpointsWork(t *testing.T) {
+	account := makeswAccount("Jacqueline", "Foody", "8T9HIU")
+	swr := makeswRequestHandler(account)
+
+	params := swr.checkinParams()
+	paramStr := swr.paramToBody(params)
+	fmt.Println("str:", paramStr)
+
+	resp := travelInfoResponse{}
+
+	if err := swr.fireRequest(&resp, paramStr); err != nil {
+		panic(err)
 	}
 }

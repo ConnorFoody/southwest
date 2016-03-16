@@ -33,7 +33,7 @@ type swConfig struct {
 
 func makeswConfig() swConfig {
 	fmtString := "Southwest/%s CFNetwork/711.1.16 Darwin/14.0.0"
-	appVersion := "2.10.1"
+	appVersion := "2.14.1"
 
 	return swConfig{
 		baseURI:         "https://mobile.southwest.com/middleware/MWServlet",
@@ -61,8 +61,7 @@ type swRequestHandler struct {
 	client *http.Client
 }
 
-func makeswRequestHandler() swRequestHandler {
-	account := makeswAccount("foo", "bar", "123abc")
+func makeswRequestHandler(account swAccount) swRequestHandler {
 
 	jar, err := cookiejar.New(nil)
 	if err != nil {
