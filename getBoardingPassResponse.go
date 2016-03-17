@@ -9,8 +9,10 @@ import (
 
 // response for the boardingPass
 type boardingPassResponse struct {
-	status int
-	ok     bool
+	status   int
+	ok       bool
+	group    string
+	position string
 }
 
 func (br *boardingPassResponse) Parse(response *http.Response) {
@@ -29,9 +31,14 @@ func (br *boardingPassResponse) Parse(response *http.Response) {
 		return
 	}
 
-	// print the boarding pass info
-	fmt.Println("group:", arbJSON["boarding_group"],
-		"spot:", arbJSON["boarding_possition"])
+	br.group = arbJSON["boarding_group"].(string)
+	br.position = arbJSON["boarding_position"].(string)
+
+	br.ok = br.group != "" && br.position != ""
+
+	if br.ok {
+		fmt.Println("GOOD CHECKIN! group:", br.group, "pos:", br.position)
+	}
 }
 
 // get the params for the boardingPass request
