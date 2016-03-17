@@ -35,22 +35,28 @@ func TestEndToEnd(t *testing.T) {
 	sampleCheckinData := loadSampleData("test_data/checkin.json")
 	sampleBoardingData := loadSampleData("test_data/boardingpasses.json")
 
-	// build test server
+	// run is used to check when the status is ready to run
 	var run uint32
+	run = 0
+
+	// build test server
 	ts := httptest.NewServer(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			canRun := rand.Intn(2) == 0
-
 			atomic.AddUint32(&run, 1)
-			fmt.Println("run:", run)
 
 			var buff bytes.Buffer
 			buff.ReadFrom(r.Body)
 
-			if strings.Contains(buff.String(), "serviceID=flightcheckin_new") && canRun {
+			if strings.Contains(buff.String(), "serviceID=flightcheckin_new") && run > 2 {
 				fmt.Fprintln(w, sampleCheckinData)
-			} else if strings.Contains(buff.String(), "serviceID=getallboardingpass") && canRun && run > 2 {
+			} else if strings.Contains(buff.String(), "serviceID=getallboardingpass") && canRun {
 				fmt.Fprintln(w, sampleBoardingData)
+			}
+
+			// throw in delay
+			if rand.ExpFloat64() > 0.1 {
+				time.Sleep(time.Duration(15 * time.Millisecond))
 			}
 		}))
 	defer ts.Close()
@@ -78,6 +84,10 @@ func TestEndToEnd(t *testing.T) {
 		// OK
 	case <-after:
 		t.Error("Expected close sooner!")
+
 	}
 
+	time.Sleep(500 * time.Millisecond)
+
+	panic("checking for straglers")
 }

@@ -48,12 +48,13 @@ func (r *CheckinTask) Send() {
 		// continue
 	case <-r.lock.TryClose():
 		fmt.Println("id:", r.id, "is closing")
+		close(statusMsg.Ok)
 		return
 	}
 
-	canContinue := <-statusMsg.Ok
+	canContinue, ok := <-statusMsg.Ok
 
-	if !canContinue || err != nil {
+	if !canContinue || !ok || err != nil {
 		fmt.Println("id:", r.id, "exiting on err:", err)
 		close(statusMsg.Ok)
 		return

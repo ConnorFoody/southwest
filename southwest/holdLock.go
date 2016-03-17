@@ -3,6 +3,7 @@ package southwest
 import (
 	"fmt"
 	"github.com/ConnorFoody/southwest/blaster"
+	"time"
 )
 
 // HoldLock "pauses" threads until it gets a confirm
@@ -62,7 +63,6 @@ func (hl HoldLock) spawnIntoPool(req blaster.RequestStatus) {
 		//done
 	case <-hl.close:
 		req.Handle(false)
-		close(req.Ok)
 		fmt.Println("closing id:", req.UUID)
 	}
 }
@@ -83,6 +83,9 @@ func (hl *HoldLock) Setup(l chan blaster.RequestStatus) {
 // Close the blast loc
 func (hl *HoldLock) Close() {
 	close(hl.close)
+	// sleep to let the close signal hit everything before closing the pool
+	// this is sort of a race condition...
+	time.Sleep(5 * time.Millisecond)
 	close(hl.pool)
 }
 
