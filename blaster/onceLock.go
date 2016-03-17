@@ -35,6 +35,7 @@ func (bl OnceBlastLock) GetChan() chan RequestStatus {
 }
 
 // Setup used by the bl
+// todo: refactor
 func (bl *OnceBlastLock) Setup(l chan RequestStatus) {
 	bl.lock = l
 	bl.close = make(chan bool)
@@ -45,3 +46,5 @@ func (bl *OnceBlastLock) Close() {
 	close(bl.close)
 
 }
+
+var _ BlastLock = (*OnceBlastLock)(nil)

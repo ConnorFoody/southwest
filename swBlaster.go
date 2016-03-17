@@ -24,20 +24,15 @@ type SWBlaster struct {
 	startTime time.Time
 
 	// for the user
-	firstName   string
-	lastName    string
-	confirmCode string
+	account swAccount
 
 	// for exiting externally
 	closer chan error
 }
 
-// TODO: error checking for all of this
 // SetAccount gives the blaster the form data for checkin
-func (b *SWBlaster) SetAccount(firstName, lastName, confirmCode string) {
-	b.firstName = firstName
-	b.lastName = lastName
-	b.confirmCode = confirmCode
+func (b *SWBlaster) SetAccount(account swAccount) {
+	b.account = account
 }
 
 // SetParams for the blast. Period is the time between requests.
@@ -64,11 +59,11 @@ func (b *SWBlaster) SetTime(timeStr string) error {
 // in an interface, the swBlaster is actually the blastBuilder and
 // it helps set up the request factory (maybe it is the request factory?)
 // this
-func (b *SWBlaster) ScheduleBlast(blast blaster.Blaster) {
+func (b *SWBlaster) ScheduleBlast(blast blaster.Blaster,
+	factory blaster.RequestFactory) {
 
-	runTime := b.startTime //.Add(-time.Duration(b.headstart) * time.Millisecond)
+	runTime := b.startTime.Add(-time.Duration(b.headstart) * time.Millisecond)
 	interval := time.Duration(b.blastPeriod) * time.Millisecond
 
-	factory := swCheckinFactory{}
-	blast.Fire(&factory, b.numRequests, runTime, interval)
+	blast.Fire(factory, b.numRequests, runTime, interval)
 }
