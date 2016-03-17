@@ -16,8 +16,9 @@ type RequestFactory interface {
 
 // RequestStatus is the status of a request on the chan
 type RequestStatus struct {
-	Ok  chan bool
-	Err error
+	Ok   chan bool
+	Err  error
+	UUID uint32
 }
 
 // Handle sending a response on the chan

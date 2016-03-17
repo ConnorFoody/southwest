@@ -1,9 +1,10 @@
-package main
+package southwest
 
 import (
 	"bytes"
 	"fmt"
 	"github.com/ConnorFoody/southwest/mocks"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -27,6 +28,8 @@ func TestShortTimeFromNow(t *testing.T) {
 }
 
 func TestEndToEnd(t *testing.T) {
+
+	rand.Seed(42)
 	// load up the base json docs
 	sampleCheckinData := loadSampleData("test_data/checkin.json")
 	sampleBoardingData := loadSampleData("test_data/boardingpasses.json")
@@ -36,11 +39,11 @@ func TestEndToEnd(t *testing.T) {
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			var buff bytes.Buffer
 			buff.ReadFrom(r.Body)
+			canRun := rand.Intn(2) == 0
 
-			if strings.Contains(buff.String(), "serviceID=flightcheckin_new") {
+			if strings.Contains(buff.String(), "serviceID=flightcheckin_new") && canRun {
 				fmt.Fprintln(w, sampleCheckinData)
-			} else if strings.Contains(buff.String(),
-				"serviceID=getallboardingpass") {
+			} else if strings.Contains(buff.String(), "serviceID=getallboardingpass") && canRun {
 				fmt.Fprintln(w, sampleBoardingData)
 			}
 		}))

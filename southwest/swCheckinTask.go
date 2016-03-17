@@ -1,15 +1,15 @@
-package main
+package southwest
 
 import (
 	"fmt"
 	"github.com/ConnorFoody/southwest/blaster"
 )
 
-// swCheckinTask manages sending a southwest request
+// CheckinTask manages sending a southwest request
 type CheckinTask struct {
 	account Account
 	lock    blaster.BlastLock
-	id      int
+	id      uint32
 	swr     requestHandler
 }
 
@@ -32,7 +32,10 @@ func (r *CheckinTask) Send() {
 	}
 
 	// comm back to see if we can keep going
-	statusMsg := blaster.RequestStatus{Ok: make(chan bool), Err: err}
+	statusMsg := blaster.RequestStatus{Ok: make(chan bool),
+		Err:  err,
+		UUID: r.id,
+	}
 	r.lock.GetChan() <- statusMsg
 
 	canContinue := <-statusMsg.Ok
@@ -63,6 +66,8 @@ func (r *CheckinTask) Send() {
 		fmt.Println("id:", r.id, "exitint on err:", err)
 		return
 	}
+
+	r.lock.Close()
 
 	fmt.Println("success on id:", r.id)
 }

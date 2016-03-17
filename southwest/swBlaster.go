@@ -1,4 +1,4 @@
-package main
+package southwest
 
 import (
 	"github.com/ConnorFoody/southwest/blaster"
