@@ -6,7 +6,7 @@ import (
 )
 
 // SWBlaster builds a blast for a southwest checkin
-type SWBlaster struct {
+type BlastScheduler struct {
 	// in millieconds
 	blastPeriod int
 
@@ -23,22 +23,14 @@ type SWBlaster struct {
 
 	startTime time.Time
 
-	// for the user
-	account swAccount
-
 	// for exiting externally
 	closer chan error
-}
-
-// SetAccount gives the blaster the form data for checkin
-func (b *SWBlaster) SetAccount(account swAccount) {
-	b.account = account
 }
 
 // SetParams for the blast. Period is the time between requests.
 // cover is the ammount of time after the checkin time to send requests.
 // headstart accounts for network latency.
-func (b *SWBlaster) SetParams(period, cover, headstart int) {
+func (b *BlastScheduler) SetParams(period, cover, headstart int) {
 	b.blastPeriod = period
 	b.cover = cover
 	b.headstart = headstart
@@ -48,7 +40,7 @@ func (b *SWBlaster) SetParams(period, cover, headstart int) {
 // SetTime that the blast will start (note that headstart adjusts this)
 // string fmt is <month abriviation> date <time> <pm/am>
 // example input date is: "jan 1 7:15 pm"
-func (b *SWBlaster) SetTime(timeStr string) error {
+func (b *BlastScheduler) SetTime(timeStr string) error {
 	targetTime, err := time.Parse("Jan 2, 2006 at 3:04pm (PST)", timeStr)
 	b.startTime = targetTime
 	return err
@@ -59,7 +51,7 @@ func (b *SWBlaster) SetTime(timeStr string) error {
 // in an interface, the swBlaster is actually the blastBuilder and
 // it helps set up the request factory (maybe it is the request factory?)
 // this
-func (b *SWBlaster) ScheduleBlast(blast blaster.Blaster,
+func (b *BlastScheduler) ScheduleBlast(blast blaster.Blaster,
 	factory blaster.RequestFactory) {
 
 	runTime := b.startTime.Add(-time.Duration(b.headstart) * time.Millisecond)

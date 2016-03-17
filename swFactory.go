@@ -4,33 +4,33 @@ import (
 	"github.com/ConnorFoody/southwest/blaster"
 )
 
-type swCheckinFactory struct {
-	account swAccount
+type CheckinFactory struct {
+	account Account
 	lock    blaster.BlastLock
 	id      int
-	config  swConfig
+	config  Config
 }
 
-func makeCheckinFactory(account swAccount,
-	config swConfig) swCheckinFactory {
+func MakeCheckinFactory(account Account,
+	config Config) CheckinFactory {
 	olock := &blaster.OnceBlastLock{}
 	olock.Setup(make(chan blaster.RequestStatus))
 	go olock.Run()
 
-	return swCheckinFactory{account: account,
+	return CheckinFactory{account: account,
 		lock:   olock,
 		id:     0,
 		config: config,
 	}
 }
 
-func (f *swCheckinFactory) GetNext() blaster.BlastRequest {
+func (f *CheckinFactory) GetNext() blaster.BlastRequest {
 	f.id++
-	return &swCheckinTask{account: f.account,
+	return &CheckinTask{account: f.account,
 		lock: f.lock,
 		id:   f.id,
-		swr:  makeswRequestHandler(f.config),
+		swr:  makeRequestHandler(f.config),
 	}
 }
 
-var _ blaster.RequestFactory = (*swCheckinFactory)(nil)
+var _ blaster.RequestFactory = (*CheckinFactory)(nil)

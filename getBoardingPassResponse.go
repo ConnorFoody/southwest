@@ -44,7 +44,7 @@ func (br *boardingPassResponse) Parse(response *http.Response) {
 }
 
 // get the params for the boardingPass request
-func (swr swRequestHandler) boardingPassParams(account swAccount) map[string]string {
+func (swr requestHandler) boardingPassParams(account Account) map[string]string {
 	ret := swr.baseParams()
 	ret["serviceID"] = "getallboardingpass"
 	ret["firstName"] = account.FirstName

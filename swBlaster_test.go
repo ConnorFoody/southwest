@@ -13,12 +13,12 @@ func errcheck(err error) {
 }
 
 func TestTime(t *testing.T) {
-	b := SWBlaster{}
+	b := BlastScheduler{}
 	errcheck(b.SetTime("mar 15, 2016 at 7:15pm (PST)"))
 	b.SetParams(10, 50, 0)
 
 	inspector := mocks.BlastInspector{}
-	factory := makeCheckinFactory(makeswAccount("foo", "bar", "123abc"), makeswConfig())
+	factory := MakeCheckinFactory(MakeAccount("foo", "bar", "123abc"), MakeConfig())
 	b.ScheduleBlast(&inspector, &factory)
 
 	_, _, runtime, _ := inspector.Get()

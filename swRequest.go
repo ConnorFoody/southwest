@@ -7,45 +7,47 @@ import (
 	"strings"
 )
 
-type swAccount struct {
+// Account for the southwest checkin. Has name and record locator.
+type Account struct {
 	// data needed for confirmation
 	FirstName     string
 	LastName      string
 	RecordLocator string
 }
 
-func makeswAccount(first, last, confirm string) swAccount {
-	return swAccount{FirstName: first,
+// MakeAccount using the provided params
+func MakeAccount(first, last, confirm string) Account {
+	return Account{FirstName: first,
 		LastName:      last,
 		RecordLocator: confirm}
 }
 
-// base config for all requests
+// Config for the net requests
 // this hits the thinclient, make sure you keep the client up to
 // date with the changes in the api versions and such
 // as of most recent writing the settings are from here:
 // https://github.com/mwynholds/southy
-type swConfig struct {
-	baseURI         string
-	AppVersion      string
+type Config struct {
+	BaseURI         string
+	appVersion      string
 	userAgentString string
-	AppID           string
-	Channel         string
-	Platform        string
+	appID           string
+	channel         string
+	platform        string
 	rcid            string
-	CacheID         string
+	cacheID         string
 }
 
-func makeswConfig() swConfig {
+func MakeConfig() Config {
 
-	return swConfig{
-		baseURI:         "https://mobile.southwest.com/middleware/MWServlet",
-		AppVersion:      "2.17.0",
+	return Config{
+		BaseURI:         "https://mobile.southwest.com/middleware/MWServlet",
+		appVersion:      "2.17.0",
 		userAgentString: "Mozilla/5.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/600.1.3 (KHTML, like Gecko) Version/8.0 Mobile/12A4345d Safari/600.1.4",
-		AppID:           "swa",
-		Channel:         "wap",
-		Platform:        "thinclient",
-		CacheID:         "",
+		appID:           "swa",
+		channel:         "wap",
+		platform:        "thinclient",
+		cacheID:         "",
 		rcid:            "spaiphone",
 	}
 }
@@ -57,14 +59,14 @@ type swResponse interface {
 
 // send the actual requests
 // TODO: figure out if we need to do the "create session" stuff
-type swRequestHandler struct {
-	config swConfig
+type requestHandler struct {
+	config Config
 
 	// client requests are sent on
 	client *http.Client
 }
 
-func makeswRequestHandler(config swConfig) swRequestHandler {
+func makeRequestHandler(config Config) requestHandler {
 
 	jar, err := cookiejar.New(nil)
 	if err != nil {
@@ -72,17 +74,16 @@ func makeswRequestHandler(config swConfig) swRequestHandler {
 	}
 	client := &http.Client{Jar: jar}
 
-	return swRequestHandler{config: config,
+	return requestHandler{config: config,
 		client: client}
 }
 
 // fire off the request
-func (swr *swRequestHandler) fireRequest(
-	response swResponse,
-	params string) error {
+func (swr *requestHandler) fireRequest(
+	response swResponse, params string) error {
 
 	request, err := http.NewRequest("POST",
-		swr.config.baseURI,
+		swr.config.BaseURI,
 		strings.NewReader(params))
 
 	if err != nil {
@@ -100,12 +101,12 @@ func (swr *swRequestHandler) fireRequest(
 	return httpResp.Body.Close()
 }
 
-func (swr swRequestHandler) buildHeader(request *http.Request) {
+func (swr requestHandler) buildHeader(request *http.Request) {
 	request.Header.Add("User-Agent", swr.config.userAgentString)
 }
 
 // convert the params to a string of form <key>=<value>&<key>=<val>
-func (swr swRequestHandler) paramToBody(params map[string]string) string {
+func (swr requestHandler) paramToBody(params map[string]string) string {
 	// use a byte buffer for effency
 	var buffer bytes.Buffer
 
@@ -128,14 +129,14 @@ func (swr swRequestHandler) paramToBody(params map[string]string) string {
 }
 
 // body params used in every call
-func (swr swRequestHandler) baseParams() map[string]string {
+func (swr requestHandler) baseParams() map[string]string {
 	ret := make(map[string]string)
 	params := swr.config
-	ret["appID"] = params.AppID
-	ret["channel"] = params.Channel
-	ret["platform"] = params.Platform
+	ret["appID"] = params.appID
+	ret["channel"] = params.channel
+	ret["platform"] = params.platform
 	ret["cacheID"] = ""
-	ret["appver"] = params.AppVersion
+	ret["appver"] = params.appVersion
 	ret["rcid"] = params.rcid
 
 	return ret

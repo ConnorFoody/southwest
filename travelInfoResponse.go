@@ -18,7 +18,7 @@ func (cr *travelInfoResponse) Parse(response *http.Response) {
 }
 
 // get the params for the travelInfo request
-func (swr swRequestHandler) travelInfoParams() map[string]string {
+func (swr requestHandler) travelInfoParams() map[string]string {
 	ret := swr.baseParams()
 	ret["serviceID"] = "getTravelInfo"
 	return ret

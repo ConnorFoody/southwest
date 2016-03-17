@@ -47,20 +47,19 @@ func TestEndToEnd(t *testing.T) {
 	defer ts.Close()
 
 	// setup the blaster
-	blastSched := SWBlaster{}
+	blastSched := BlastScheduler{}
 
 	blastSched.SetParams(10, 100, 0)
-	blastSched.SetAccount(makeswAccount("foo", "bar", "123abc"))
 	blastSched.SetTime(shortTimeFromNow())
 
 	// TODO: make a real blaster
 	blastFirer := mocks.SimpleBlaster{}
 
 	// build and run
-	config := makeswConfig()
-	config.baseURI = ts.URL
+	config := MakeConfig()
+	config.BaseURI = ts.URL
 	factory :=
-		makeCheckinFactory(makeswAccount("foo", "bar", "123abc"), config)
+		MakeCheckinFactory(MakeAccount("foo", "bar", "123abc"), config)
 
 	go blastSched.ScheduleBlast(&blastFirer, &factory)
 

@@ -6,15 +6,15 @@ import (
 )
 
 // swCheckinTask manages sending a southwest request
-type swCheckinTask struct {
-	account swAccount
+type CheckinTask struct {
+	account Account
 	lock    blaster.BlastLock
 	id      int
-	swr     swRequestHandler
+	swr     requestHandler
 }
 
 // Send a sw checkin request
-func (r *swCheckinTask) Send() {
+func (r *CheckinTask) Send() {
 	// build teh request handler
 	swr := r.swr
 
@@ -65,7 +65,6 @@ func (r *swCheckinTask) Send() {
 	}
 
 	fmt.Println("success on id:", r.id)
-
 }
 
-var _ blaster.BlastRequest = (*swCheckinTask)(nil)
+var _ blaster.BlastRequest = (*CheckinTask)(nil)

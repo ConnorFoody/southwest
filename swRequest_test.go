@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	testAccount = swAccount{FirstName: "foo", LastName: "bar", RecordLocator: "abc123"}
+	testAccount = Account{FirstName: "foo", LastName: "bar", RecordLocator: "abc123"}
 )
 
 func handleTestingError(err error) {
@@ -40,10 +40,10 @@ func buildJSONResponseServer(jsonFile string) *httptest.Server {
 
 }
 
-func buildTestRequestHandler(url string) swRequestHandler {
-	config := makeswConfig()
-	config.baseURI = url
-	swr := makeswRequestHandler(config)
+func buildTestRequestHandler(url string) requestHandler {
+	config := MakeConfig()
+	config.BaseURI = url
+	swr := makeRequestHandler(config)
 	return swr
 }
 
@@ -84,7 +84,7 @@ func (swv *testswValidResponse) Parse(response *http.Response) {
 }
 
 // get the params for the checkin request
-func (swr swRequestHandler) testValidParams(account swAccount) map[string]string {
+func (swr requestHandler) testValidParams(account Account) map[string]string {
 	ret := swr.baseParams()
 	ret["serviceID"] = "flighcheckin_new"
 	ret["firstName"] = account.FirstName
@@ -96,8 +96,8 @@ func (swr swRequestHandler) testValidParams(account swAccount) map[string]string
 func TestSWEndpointsWork(t *testing.T) {
 	t.Skip("explicitly enable calls on the actual site")
 	fmt.Println("SHOULDN'T HIS THIS!")
-	account := makeswAccount("Hackeleen", "Fudy", "8T9HIU")
-	swr := makeswRequestHandler(makeswConfig())
+	account := MakeAccount("Hackeleen", "Fudy", "8T9HIU")
+	swr := makeRequestHandler(MakeConfig())
 
 	params := swr.checkinParams(account)
 	paramStr := swr.paramToBody(params)
