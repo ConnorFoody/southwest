@@ -32,6 +32,7 @@ type BlastLock interface {
 	Run()
 	Setup(chan RequestStatus)
 	Close()
+	TryClose() chan struct{}
 }
 
 // Blaster fires off the request

@@ -15,6 +15,12 @@ type CheckinTask struct {
 
 // Send a sw checkin request
 func (r *CheckinTask) Send() {
+	// don't run another request on a closed chan
+	select {
+	case <-r.lock.TryClose():
+		return
+	default:
+	}
 	// build teh request handler
 	swr := r.swr
 
@@ -36,15 +42,23 @@ func (r *CheckinTask) Send() {
 		Err:  err,
 		UUID: r.id,
 	}
-	r.lock.GetChan() <- statusMsg
+	fmt.Println("id:", r.id, "trying to send", err == nil, "status")
+	select {
+	case r.lock.GetChan() <- statusMsg:
+		// continue
+	case <-r.lock.TryClose():
+		fmt.Println("id:", r.id, "is closing")
+		return
+	}
 
 	canContinue := <-statusMsg.Ok
 
 	if !canContinue || err != nil {
-		fmt.Println("id:", r.id, "exitint on err:", err)
+		fmt.Println("id:", r.id, "exiting on err:", err)
 		close(statusMsg.Ok)
 		return
 	}
+	fmt.Println("id:", r.id, "getting boarding pass")
 
 	// if we can keep going then go get the boarding passes
 	boardingParams := swr.boardingPassParams(r.account)
@@ -63,7 +77,7 @@ func (r *CheckinTask) Send() {
 
 	if err != nil {
 		close(statusMsg.Ok)
-		fmt.Println("id:", r.id, "exitint on err:", err)
+		fmt.Println("id:", r.id, "exiting on err:", err)
 		return
 	}
 

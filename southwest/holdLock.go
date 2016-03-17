@@ -1,6 +1,7 @@
 package southwest
 
 import (
+	"fmt"
 	"github.com/ConnorFoody/southwest/blaster"
 )
 
@@ -8,7 +9,7 @@ import (
 type HoldLock struct {
 	lock  chan blaster.RequestStatus
 	pool  chan blaster.RequestStatus
-	close chan bool
+	close chan struct{}
 }
 
 // Run the holdlock until it is closed
@@ -44,6 +45,7 @@ func (hl *HoldLock) Run() {
 			go result.Handle(true)
 
 		case <-hl.close:
+			fmt.Println("closing hold lock!")
 			return
 		}
 	}
@@ -60,6 +62,8 @@ func (hl HoldLock) spawnIntoPool(req blaster.RequestStatus) {
 		//done
 	case <-hl.close:
 		req.Handle(false)
+		close(req.Ok)
+		fmt.Println("closing id:", req.UUID)
 	}
 }
 
@@ -72,7 +76,7 @@ func (hl HoldLock) GetChan() chan blaster.RequestStatus {
 // todo: refactor
 func (hl *HoldLock) Setup(l chan blaster.RequestStatus) {
 	hl.lock = l
-	hl.close = make(chan bool)
+	hl.close = make(chan struct{})
 	hl.pool = make(chan blaster.RequestStatus)
 }
 
@@ -80,6 +84,11 @@ func (hl *HoldLock) Setup(l chan blaster.RequestStatus) {
 func (hl *HoldLock) Close() {
 	close(hl.close)
 	close(hl.pool)
+}
+
+// TryClose checks if the lock is closed
+func (hl HoldLock) TryClose() chan struct{} {
+	return hl.close
 }
 
 var _ blaster.BlastLock = (*HoldLock)(nil)

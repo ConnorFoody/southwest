@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -35,15 +36,20 @@ func TestEndToEnd(t *testing.T) {
 	sampleBoardingData := loadSampleData("test_data/boardingpasses.json")
 
 	// build test server
+	var run uint32
 	ts := httptest.NewServer(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			canRun := rand.Intn(2) == 0
+
+			atomic.AddUint32(&run, 1)
+			fmt.Println("run:", run)
+
 			var buff bytes.Buffer
 			buff.ReadFrom(r.Body)
-			canRun := rand.Intn(2) == 0
 
 			if strings.Contains(buff.String(), "serviceID=flightcheckin_new") && canRun {
 				fmt.Fprintln(w, sampleCheckinData)
-			} else if strings.Contains(buff.String(), "serviceID=getallboardingpass") && canRun {
+			} else if strings.Contains(buff.String(), "serviceID=getallboardingpass") && canRun && run > 2 {
 				fmt.Fprintln(w, sampleBoardingData)
 			}
 		}))
@@ -66,5 +72,12 @@ func TestEndToEnd(t *testing.T) {
 
 	go blastSched.ScheduleBlast(&blastFirer, &factory)
 
-	time.Sleep(time.Duration(3 * time.Second))
+	after := time.After(3 * time.Second)
+	select {
+	case <-factory.lock.TryClose():
+		// OK
+	case <-after:
+		t.Error("Expected close sooner!")
+	}
+
 }

@@ -3,7 +3,7 @@ package blaster
 // OnceBlastLock locks after the first task through
 type OnceBlastLock struct {
 	lock  chan RequestStatus
-	close chan bool
+	close chan struct{}
 }
 
 // Run until close is called, put in its own goroutine
@@ -38,13 +38,17 @@ func (bl OnceBlastLock) GetChan() chan RequestStatus {
 // todo: refactor
 func (bl *OnceBlastLock) Setup(l chan RequestStatus) {
 	bl.lock = l
-	bl.close = make(chan bool)
+	bl.close = make(chan struct{})
 }
 
 // Close the blast loc
 func (bl *OnceBlastLock) Close() {
 	close(bl.close)
+}
 
+// TryClose checks if lock is closed
+func (bl *OnceBlastLock) TryClose() chan struct{} {
+	return bl.close
 }
 
 var _ BlastLock = (*OnceBlastLock)(nil)
