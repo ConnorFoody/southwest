@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/ConnorFoody/southwest/mocks"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 )
@@ -27,11 +29,20 @@ func TestShortTimeFromNow(t *testing.T) {
 func TestEndToEnd(t *testing.T) {
 	// load up the base json docs
 	sampleCheckinData := loadSampleData("test_data/checkin.json")
+	sampleBoardingData := loadSampleData("test_data/boardingpasses.json")
 
 	// build test server
 	ts := httptest.NewServer(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintln(w, sampleCheckinData)
+			var buff bytes.Buffer
+			buff.ReadFrom(r.Body)
+
+			if strings.Contains(buff.String(), "serviceID=flightcheckin_new") {
+				fmt.Fprintln(w, sampleCheckinData)
+			} else if strings.Contains(buff.String(),
+				"serviceID=getallboardingpass") {
+				fmt.Fprintln(w, sampleBoardingData)
+			}
 		}))
 	defer ts.Close()
 
@@ -46,6 +57,12 @@ func TestEndToEnd(t *testing.T) {
 	blastFirer := mocks.SimpleBlaster{}
 
 	// build and run
-	factory := makeCheckinFactory(makeswAccount("foo", "bar", "123abc"))
+	config := makeswConfig()
+	config.baseURI = ts.URL
+	factory :=
+		makeCheckinFactory(makeswAccount("foo", "bar", "123abc"), config)
+
 	go blastSched.ScheduleBlast(&blastFirer, &factory)
+
+	time.Sleep(time.Duration(3 * time.Second))
 }

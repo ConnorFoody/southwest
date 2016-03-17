@@ -10,20 +10,21 @@ type swCheckinTask struct {
 	account swAccount
 	lock    blaster.BlastLock
 	id      int
+	swr     swRequestHandler
 }
 
 // Send a sw checkin request
 func (r *swCheckinTask) Send() {
 	// build teh request handler
-	swr := makeswRequestHandler(r.account)
+	swr := r.swr
 
 	// build and send first request
-	checkinParams := swr.checkinParams()
+	checkinParams := swr.checkinParams(r.account)
 	checkinString := swr.paramToBody(checkinParams)
 
 	checkinResp := checkinResponse{}
 	err := swr.fireRequest(&checkinResp, checkinString)
-	if err == nil {
+	if err != nil {
 	} else if !checkinResp.ok {
 		err = fmt.Errorf("something wrong with status\n")
 	} else if checkinResp.status != 200 {
@@ -37,34 +38,29 @@ func (r *swCheckinTask) Send() {
 	canContinue := <-statusMsg.Ok
 
 	if !canContinue || err != nil {
+		fmt.Println("id:", r.id, "exitint on err:", err)
 		close(statusMsg.Ok)
 		return
 	}
 
 	// if we can keep going then go get the boarding passes
-	boardingParams := swr.boardingPassParams()
+	boardingParams := swr.boardingPassParams(r.account)
 	boardingString := swr.paramToBody(boardingParams)
 
 	boardingResp := boardingPassResponse{}
 
 	err = swr.fireRequest(&boardingResp, boardingString)
 
-	if err == nil {
-	} else if !checkinResp.ok {
+	if err != nil {
+	} else if !boardingResp.ok {
 		err = fmt.Errorf("something wrong with status\n")
-	} else if checkinResp.status != 200 {
+	} else if boardingResp.status != 200 {
 		fmt.Println("warn: checkin OK but bad status:", checkinResp.status)
 	}
 
-	// update the status message
-	statusMsg.Err = err
-
-	r.lock.GetChan() <- statusMsg
-
-	canContinue = <-statusMsg.Ok
-
-	if !canContinue || err != nil {
+	if err != nil {
 		close(statusMsg.Ok)
+		fmt.Println("id:", r.id, "exitint on err:", err)
 		return
 	}
 

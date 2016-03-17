@@ -18,7 +18,7 @@ func TestTime(t *testing.T) {
 	b.SetParams(10, 50, 0)
 
 	inspector := mocks.BlastInspector{}
-	factory := makeCheckinFactory(makeswAccount("foo", "bar", "123abc"))
+	factory := makeCheckinFactory(makeswAccount("foo", "bar", "123abc"), makeswConfig())
 	b.ScheduleBlast(&inspector, &factory)
 
 	_, _, runtime, _ := inspector.Get()

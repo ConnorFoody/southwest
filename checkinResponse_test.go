@@ -10,7 +10,7 @@ func TestCheckin(t *testing.T) {
 
 	swr := buildTestRequestHandler(ts.URL)
 
-	params := swr.checkinParams()
+	params := swr.checkinParams(makeswAccount("foo", "bar", "123"))
 	paramStr := swr.paramToBody(params)
 
 	resp := checkinResponse{}

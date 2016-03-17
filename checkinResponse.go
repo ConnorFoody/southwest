@@ -33,11 +33,11 @@ func (cr *checkinResponse) Parse(response *http.Response) {
 }
 
 // get the params for the checkin request
-func (swr swRequestHandler) checkinParams() map[string]string {
+func (swr swRequestHandler) checkinParams(account swAccount) map[string]string {
 	ret := swr.baseParams()
 	ret["serviceID"] = "flightcheckin_new"
-	ret["firstName"] = swr.account.FirstName
-	ret["lastName"] = swr.account.LastName
-	ret["recordLocator"] = swr.account.RecordLocator
+	ret["firstName"] = account.FirstName
+	ret["lastName"] = account.LastName
+	ret["recordLocator"] = account.RecordLocator
 	return ret
 }

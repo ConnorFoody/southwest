@@ -58,14 +58,13 @@ type swResponse interface {
 // send the actual requests
 // TODO: figure out if we need to do the "create session" stuff
 type swRequestHandler struct {
-	config  swConfig
-	account swAccount
+	config swConfig
 
 	// client requests are sent on
 	client *http.Client
 }
 
-func makeswRequestHandler(account swAccount) swRequestHandler {
+func makeswRequestHandler(config swConfig) swRequestHandler {
 
 	jar, err := cookiejar.New(nil)
 	if err != nil {
@@ -73,9 +72,8 @@ func makeswRequestHandler(account swAccount) swRequestHandler {
 	}
 	client := &http.Client{Jar: jar}
 
-	return swRequestHandler{config: makeswConfig(),
-		account: account,
-		client:  client}
+	return swRequestHandler{config: config,
+		client: client}
 }
 
 // fire off the request

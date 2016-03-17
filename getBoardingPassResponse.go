@@ -19,9 +19,9 @@ func (br *boardingPassResponse) Parse(response *http.Response) {
 	br.status = response.StatusCode
 
 	br.ok = false
+
 	var buff bytes.Buffer
 	buff.ReadFrom(response.Body)
-	fmt.Println("response is:", buff.String())
 
 	// try to parse out the boarding groups
 	var arbJSON map[string]interface{}
@@ -31,22 +31,24 @@ func (br *boardingPassResponse) Parse(response *http.Response) {
 		return
 	}
 
-	br.group = arbJSON["boarding_group"].(string)
-	br.position = arbJSON["boarding_position"].(string)
+	group, groupOK := arbJSON["boarding_group"]
+	position, posOK := arbJSON["boarding_position"]
 
-	br.ok = br.group != "" && br.position != ""
+	br.ok = groupOK && posOK
 
 	if br.ok {
+		br.group = group.(string)
+		br.position = position.(string)
 		fmt.Println("GOOD CHECKIN! group:", br.group, "pos:", br.position)
 	}
 }
 
 // get the params for the boardingPass request
-func (swr swRequestHandler) boardingPassParams() map[string]string {
+func (swr swRequestHandler) boardingPassParams(account swAccount) map[string]string {
 	ret := swr.baseParams()
 	ret["serviceID"] = "getallboardingpass"
-	ret["firstName"] = swr.account.FirstName
-	ret["lastName"] = swr.account.LastName
-	ret["recordLocator"] = swr.account.RecordLocator
+	ret["firstName"] = account.FirstName
+	ret["lastName"] = account.LastName
+	ret["recordLocator"] = account.RecordLocator
 	return ret
 }
