@@ -65,6 +65,7 @@ func TestFireRequest(t *testing.T) {
 		panic(err)
 	}
 
+	// note that we aren't expecting anything
 	if resp.ok {
 		t.Errorf("did not expect to get an OK response!\n")
 	}
@@ -91,7 +92,9 @@ func (swr swRequestHandler) testValidParams() map[string]string {
 }
 
 func TestSWEndpointsWork(t *testing.T) {
-	account := makeswAccount("Jacqueline", "Foody", "8T9HIU")
+	t.Skip("explicitly enable calls on the actual site")
+	fmt.Println("SHOULDN'T HIS THIS!")
+	account := makeswAccount("Hackeleen", "Fudy", "8T9HIU")
 	swr := makeswRequestHandler(account)
 
 	params := swr.checkinParams()

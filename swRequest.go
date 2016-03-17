@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"strings"
@@ -21,6 +20,11 @@ func makeswAccount(first, last, confirm string) swAccount {
 		RecordLocator: confirm}
 }
 
+// base config for all requests
+// this hits the thinclient, make sure you keep the client up to
+// date with the changes in the api versions and such
+// as of most recent writing the settings are from here:
+// https://github.com/mwynholds/southy
 type swConfig struct {
 	baseURI         string
 	AppVersion      string
@@ -28,21 +32,21 @@ type swConfig struct {
 	AppID           string
 	Channel         string
 	Platform        string
+	rcid            string
 	CacheID         string
 }
 
 func makeswConfig() swConfig {
-	fmtString := "Southwest/%s CFNetwork/711.1.16 Darwin/14.0.0"
-	appVersion := "2.14.1"
 
 	return swConfig{
 		baseURI:         "https://mobile.southwest.com/middleware/MWServlet",
-		AppVersion:      appVersion,
-		userAgentString: fmt.Sprintf(fmtString, appVersion),
+		AppVersion:      "2.17.0",
+		userAgentString: "Mozilla/5.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/600.1.3 (KHTML, like Gecko) Version/8.0 Mobile/12A4345d Safari/600.1.4",
 		AppID:           "swa",
-		Channel:         "rc",
-		Platform:        "iPhone",
+		Channel:         "wap",
+		Platform:        "thinclient",
 		CacheID:         "",
+		rcid:            "spaiphone",
 	}
 }
 
@@ -134,6 +138,7 @@ func (swr swRequestHandler) baseParams() map[string]string {
 	ret["platform"] = params.Platform
 	ret["cacheID"] = ""
 	ret["appver"] = params.AppVersion
+	ret["rcid"] = params.rcid
 
 	return ret
 }
