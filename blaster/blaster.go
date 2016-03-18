@@ -12,6 +12,7 @@ type BlastRequest interface {
 // RequestFactory builds requests
 type RequestFactory interface {
 	GetNext() BlastRequest
+	Done() chan struct{}
 }
 
 // RequestStatus is the status of a request on the chan

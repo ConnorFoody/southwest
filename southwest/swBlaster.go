@@ -1,11 +1,12 @@
 package southwest
 
 import (
+	"fmt"
 	"github.com/ConnorFoody/southwest/blaster"
 	"time"
 )
 
-// SWBlaster builds a blast for a southwest checkin
+// BlastScheduler builds a blast for a southwest checkin
 type BlastScheduler struct {
 	// in millieconds
 	blastPeriod int
@@ -41,7 +42,8 @@ func (b *BlastScheduler) SetParams(period, cover, headstart int) {
 // string fmt is <month abriviation> date <time> <pm/am>
 // example input date is: "jan 1 7:15 pm"
 func (b *BlastScheduler) SetTime(timeStr string) error {
-	targetTime, err := time.Parse("Jan 2, 2006 at 3:04pm (PST)", timeStr)
+	fmtStr := "Jan 2 15:04:05 -0700 MST 2006"
+	targetTime, err := time.Parse(fmtStr, timeStr)
 	b.startTime = targetTime
 	return err
 }
@@ -56,6 +58,7 @@ func (b *BlastScheduler) ScheduleBlast(blast blaster.Blaster,
 
 	runTime := b.startTime.Add(-time.Duration(b.headstart) * time.Millisecond)
 	interval := time.Duration(b.blastPeriod) * time.Millisecond
+	fmt.Println("going to run at time:", runTime.String())
 
 	blast.Fire(factory, b.numRequests, runTime, interval)
 }

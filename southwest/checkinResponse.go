@@ -23,6 +23,7 @@ func (cr *checkinResponse) Parse(response *http.Response) {
 	var arbJSON map[string]interface{}
 
 	err := json.Unmarshal(buff.Bytes(), &arbJSON)
+	fmt.Println("checkin json:", buff.String())
 	if err != nil {
 		fmt.Println("err decoding json:", err)
 		return

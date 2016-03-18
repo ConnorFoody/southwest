@@ -24,12 +24,18 @@ func (r *CheckinTask) Send() {
 	// build teh request handler
 	swr := r.swr
 
+	// get travel info
+	travelInfoParams := swr.travelInfoParams()
+	travelInfoString := swr.paramToBody(travelInfoParams)
+	travelInfoResponse := travelInfoResponse{}
+	err := swr.fireRequest(&travelInfoResponse, travelInfoString)
+
 	// build and send first request
 	checkinParams := swr.checkinParams(r.account)
 	checkinString := swr.paramToBody(checkinParams)
 
 	checkinResp := checkinResponse{}
-	err := swr.fireRequest(&checkinResp, checkinString)
+	err = swr.fireRequest(&checkinResp, checkinString)
 	if err != nil {
 	} else if !checkinResp.ok {
 		err = fmt.Errorf("something wrong with status\n")

@@ -37,4 +37,9 @@ func (f *CheckinFactory) GetNext() blaster.BlastRequest {
 	}
 }
 
+// Done with the factory
+func (f *CheckinFactory) Done() chan struct{} {
+	return f.lock.TryClose()
+}
+
 var _ blaster.RequestFactory = (*CheckinFactory)(nil)

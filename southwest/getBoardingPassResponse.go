@@ -26,6 +26,7 @@ func (br *boardingPassResponse) Parse(response *http.Response) {
 	// try to parse out the boarding groups
 	var arbJSON map[string]interface{}
 	err := json.Unmarshal(buff.Bytes(), &arbJSON)
+	fmt.Println("boarding pass resp:", buff.String())
 	if err != nil {
 		fmt.Println("err decoding boardingpasses:", err)
 		return
