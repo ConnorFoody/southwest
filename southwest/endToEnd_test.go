@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/ConnorFoody/southwest/mocks"
+	"log"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -30,6 +31,7 @@ func TestShortTimeFromNow(t *testing.T) {
 }
 
 func TestEndToEnd(t *testing.T) {
+	log.SetFlags(log.Ltime | log.Lshortfile)
 
 	rand.Seed(42)
 	// load up the base json docs
@@ -38,7 +40,7 @@ func TestEndToEnd(t *testing.T) {
 
 	// run is used to check when the status is ready to run
 	var run uint32
-	run = 4
+	run = 0
 
 	// build test server
 	ts := httptest.NewServer(
@@ -56,7 +58,7 @@ func TestEndToEnd(t *testing.T) {
 			}
 
 			// throw in delay
-			if rand.ExpFloat64() > -1.1 {
+			if rand.ExpFloat64() > 1.1 {
 				time.Sleep(time.Duration(15 * time.Millisecond))
 			}
 		}))
@@ -65,8 +67,7 @@ func TestEndToEnd(t *testing.T) {
 	// setup the blaster
 	blastSched := BlastScheduler{}
 
-	blastSched.SetParams(10, 10, 0)
-	fmt.Println("short time from now:", shortTimeFromNow())
+	blastSched.SetParams(10, 200, 0)
 	blastSched.SetTime(shortTimeFromNow())
 
 	// TODO: make a real blaster

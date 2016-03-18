@@ -33,6 +33,19 @@ func (cr *checkinResponse) Parse(response *http.Response) {
 	cr.ok = arbJSON["output"] != nil
 }
 
+func (swr requestHandler) doCheckin(account Account) (
+	checkinResponse, error) {
+
+	checkinParams := swr.checkinParams(account)
+	checkinString := swr.paramToBody(checkinParams)
+
+	checkinResp := checkinResponse{}
+	err := swr.fireRequest(&checkinResp, checkinString)
+
+	return checkinResp, err
+
+}
+
 // get the params for the checkin request
 func (swr requestHandler) checkinParams(account Account) map[string]string {
 	ret := swr.baseParams()

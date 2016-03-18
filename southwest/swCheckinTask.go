@@ -3,6 +3,7 @@ package southwest
 import (
 	"fmt"
 	"github.com/ConnorFoody/southwest/blaster"
+	"log"
 )
 
 // CheckinTask manages sending a southwest request
@@ -21,7 +22,8 @@ func (r *CheckinTask) Send() {
 		return
 	default:
 	}
-	// build teh request handler
+
+	// get the request handler
 	swr := r.swr
 
 	// get travel info
@@ -31,16 +33,13 @@ func (r *CheckinTask) Send() {
 	err := swr.fireRequest(&travelInfoResponse, travelInfoString)
 
 	// build and send first request
-	checkinParams := swr.checkinParams(r.account)
-	checkinString := swr.paramToBody(checkinParams)
+	checkinResp, err := swr.doCheckin(r.account)
 
-	checkinResp := checkinResponse{}
-	err = swr.fireRequest(&checkinResp, checkinString)
 	if err != nil {
 	} else if !checkinResp.ok {
 		err = fmt.Errorf("something wrong with status\n")
 	} else if checkinResp.status != 200 {
-		fmt.Println("warn: checkin OK but bad status:", checkinResp.status)
+		log.Println("warn: checkin OK but bad status:", checkinResp.status)
 	}
 
 	// comm back to see if we can keep going
@@ -48,12 +47,12 @@ func (r *CheckinTask) Send() {
 		Err:  err,
 		UUID: r.id,
 	}
-	fmt.Println("id:", r.id, "trying to send", err == nil, "status")
+
 	select {
 	case r.lock.GetChan() <- statusMsg:
 		// continue
 	case <-r.lock.TryClose():
-		fmt.Println("id:", r.id, "is closing")
+		log.Println("id:", r.id, "is closing")
 		close(statusMsg.Ok)
 		return
 	}
@@ -65,32 +64,27 @@ func (r *CheckinTask) Send() {
 		close(statusMsg.Ok)
 		return
 	}
-	fmt.Println("id:", r.id, "getting boarding pass")
+	log.Println("id:", r.id, "getting boarding pass")
 
 	// if we can keep going then go get the boarding passes
-	boardingParams := swr.boardingPassParams(r.account)
-	boardingString := swr.paramToBody(boardingParams)
-
-	boardingResp := boardingPassResponse{}
-
-	err = swr.fireRequest(&boardingResp, boardingString)
+	boardingResp, err := swr.getBoardingPass(r.account)
 
 	if err != nil {
 	} else if !boardingResp.ok {
 		err = fmt.Errorf("something wrong with status\n")
 	} else if boardingResp.status != 200 {
-		fmt.Println("warn: checkin OK but bad status:", checkinResp.status)
+		log.Println("warn: checkin OK but bad status:", checkinResp.status)
 	}
 
 	if err != nil {
 		close(statusMsg.Ok)
-		fmt.Println("id:", r.id, "exiting on err:", err)
+		log.Println("id:", r.id, "exiting on err:", err)
 		return
 	}
 
 	r.lock.Close()
 
-	fmt.Println("success on id:", r.id)
+	log.Println("success on id:", r.id)
 }
 
 var _ blaster.BlastRequest = (*CheckinTask)(nil)

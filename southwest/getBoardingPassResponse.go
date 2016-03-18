@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -26,22 +27,39 @@ func (br *boardingPassResponse) Parse(response *http.Response) {
 	// try to parse out the boarding groups
 	var arbJSON map[string]interface{}
 	err := json.Unmarshal(buff.Bytes(), &arbJSON)
-	fmt.Println("boarding pass resp:", buff.String())
+	log.Println(buff.String())
+
 	if err != nil {
 		fmt.Println("err decoding boardingpasses:", err)
 		return
 	}
 
-	group, groupOK := arbJSON["boarding_group"]
-	position, posOK := arbJSON["boarding_position"]
+	mbp := arbJSON["mbpPassenger"].([]interface{})
+	passMap := mbp[0].(map[string]interface{})
+
+	// see golang issue 6842 for use of tmp vars
+	group, groupOK := passMap["boardingroup_text"]
+	position, posOK := passMap["position1_text"]
+	br.group = group.(string)
+	br.position = position.(string)
 
 	br.ok = groupOK && posOK
 
 	if br.ok {
-		br.group = group.(string)
-		br.position = position.(string)
-		fmt.Println("GOOD CHECKIN! group:", br.group, "pos:", br.position)
+		log.Println("GOOD CHECKIN! group:", br.group, "pos:", br.position)
 	}
+}
+
+func (swr *requestHandler) getBoardingPass(account Account) (
+	boardingPassResponse, error) {
+
+	boardingParams := swr.boardingPassParams(account)
+	boardingString := swr.paramToBody(boardingParams)
+
+	boardingResp := boardingPassResponse{}
+	err := swr.fireRequest(&boardingResp, boardingString)
+
+	return boardingResp, err
 }
 
 // get the params for the boardingPass request
