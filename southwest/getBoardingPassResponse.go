@@ -33,7 +33,11 @@ func (br *boardingPassResponse) Parse(response *http.Response) {
 		fmt.Println("err decoding boardingpasses:", err)
 		return
 	}
+	// TODO: real error handling. The casts and map reads are dangerous
+	// and may panic if they change the JSON. This needs to be fixed if
+	// we want to use this for more than one-off things
 
+	// TODO: get boarding passes for multiple travellers
 	mbp := arbJSON["mbpPassenger"].([]interface{})
 	passMap := mbp[0].(map[string]interface{})
 
@@ -50,7 +54,8 @@ func (br *boardingPassResponse) Parse(response *http.Response) {
 	}
 }
 
-func (swr *requestHandler) getBoardingPass(account Account) (
+// wrap the boarding pass request
+func (swr *requestHandler) doBoardingPass(account Account) (
 	boardingPassResponse, error) {
 
 	boardingParams := swr.boardingPassParams(account)

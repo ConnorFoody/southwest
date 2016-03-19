@@ -30,6 +30,13 @@ type CheckinTask struct {
 // if a real phone can be loaded in. We can also distribute it
 // like we did with opinionated (may even be able to use that
 // infastructure)
+// NOTE: I am not sure that being sneaky is a great approach. I think
+// that they may be more unhappy with some of the sneaky stuff than they
+// would be with high request volume. It may be an easier flag to raise
+// as well. However, to get the kind of request volume we have you would
+// need several devices, so the sneaky stuff might be more natural. I
+// don't think going to a bunch of different ips like we did with
+// opinionated would make them happy.
 //
 // TODO: be more gentle with southwest:
 // Each request establishes a session with the server before it
@@ -98,7 +105,7 @@ func (r *CheckinTask) Send() {
 	log.Println("id:", r.id, "getting boarding pass")
 
 	// if we can keep going then go get the boarding passes
-	boardingResp, err := swr.getBoardingPass(r.account)
+	boardingResp, err := swr.doBoardingPass(r.account)
 
 	if err != nil {
 	} else if !boardingResp.ok {
@@ -113,6 +120,8 @@ func (r *CheckinTask) Send() {
 		return
 	}
 
+	// the first task to make it all the way through should close
+	// everything down
 	r.lock.Close()
 
 	log.Println("success on id:", r.id)

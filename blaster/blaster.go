@@ -43,13 +43,15 @@ func (rs RequestStatus) Handle(resp bool) {
 
 // BlastLock controls how the requests get fired by acting as a dynamic
 // barrier. Procs communicate their status (RequestStatus) to the lock
-// and the lock responds when the task can continue. Look up "go channel
-// axioms" by dave channey (last name?) to get a better idea of how this
-// works.
+// and the lock responds when the task can continue. Dave cheney has an
+// excellent writeup called "go channel axioms" that may be helpful in
+// understanding some of the things we do with chans in the locks.
 type BlastLock interface {
 	// GetChan for sending RequestStatus messages to the lock. This
-	// function does not block and is threadsafe, but the channel reads may
-	// block. The "client" should check that the lock has not closed.
+	// function does not block and is threadsafe. Write to this chan should
+	// no block unless the lock is closed. The "client" should check that
+	// the lock has not closed when writing.
+	// TODO: make this return write only
 	GetChan() chan RequestStatus
 
 	// Run the lock until a close signal is sent. This will block.
@@ -70,6 +72,7 @@ type BlastLock interface {
 	// will return immediately. Otherwise reads will block. This should be
 	// used in any select that uses the main comms chan. Use anon structs
 	// because they take up no mem. Mechanism is just a close(chan).
+	// TODO: make this return read only
 	TryClose() chan struct{}
 }
 

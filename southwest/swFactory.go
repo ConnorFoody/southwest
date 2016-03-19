@@ -5,7 +5,7 @@ import (
 	"sync/atomic"
 )
 
-// CheckinFactory builds checkin tasks
+// CheckinFactory builds checkin tasks.
 type CheckinFactory struct {
 	account Account           // acc for checkin
 	lock    blaster.BlastLock // lock for handling requests

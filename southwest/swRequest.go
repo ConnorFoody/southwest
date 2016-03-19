@@ -38,6 +38,7 @@ type Config struct {
 	cacheID         string
 }
 
+// MakeConfig does what you'd expect
 func MakeConfig() Config {
 
 	return Config{
@@ -52,13 +53,12 @@ func MakeConfig() Config {
 	}
 }
 
-// wrapper on teh http response
+// swResponse parses the net responses to extract the info we want
 type swResponse interface {
 	Parse(*http.Response)
 }
 
-// send the actual requests
-// TODO: figure out if we need to do the "create session" stuff
+// send the actual requests. Stores cookies to keep track of the session
 type requestHandler struct {
 	config Config
 
@@ -78,7 +78,7 @@ func makeRequestHandler(config Config) requestHandler {
 		client: client}
 }
 
-// fire off the request
+// fire off the request. Treats the response sort of like a callback
 func (swr *requestHandler) fireRequest(
 	response swResponse, params string) error {
 
