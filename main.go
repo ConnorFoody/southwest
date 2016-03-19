@@ -7,32 +7,25 @@ import (
 	"github.com/ConnorFoody/southwest/southwest"
 	"os"
 	"strings"
-	"time"
 )
 
-func shortTimeFromNow() string {
-	// 100 ms from now
-	fmtStr := "Jan 2 15:04:05 -0700 MST 2006"
-	return time.Now().Add(time.Duration(100 * time.Millisecond)).Format(fmtStr)
-}
-
 func main() {
-	fmtStr := "Jan 2 15:04:05 -0700 MST 2006"
-	fmt.Println("Now is:", time.Now().Format(fmtStr))
+	// TODO:make the time more intuitive...
+	fmtStr := "Jan 2 15:04:05 -0700 PDT 2006"
 	fmt.Println("welcome to the SW checkin bomber")
 	fmt.Println("FORMAT:", fmtStr)
 	fmt.Print("enter time: ")
 
-	// get the input line
+	// read from the cmd line
 	cmdLine := bufio.NewReader(os.Stdin)
+
+	// get the input line
 	timeStr, err := cmdLine.ReadString('\n')
 	timeStr = strings.Trim(timeStr, "\n")
 	if err != nil {
 		err = fmt.Errorf("error parsing text \"%s\", error: %s\n", timeStr, err)
 		panic(err)
 	}
-
-	fmt.Println("tstr:", timeStr)
 
 	// build sched
 	sched := southwest.BlastScheduler{}
@@ -66,11 +59,12 @@ func main() {
 
 	fmt.Printf("first: %s last: %s, confirm: %s\n", account.FirstName, account.LastName, account.RecordLocator)
 
-	// build the actual date
+	// build and submit the blast
 	factory := southwest.MakeCheckinFactory(account, southwest.MakeConfig())
 	blaster := mocks.SimpleBlaster{}
 
 	sched.ScheduleBlast(&blaster, &factory)
 
+	// wait until the factory is all done
 	<-factory.Done()
 }
