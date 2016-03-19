@@ -16,6 +16,7 @@ type CheckinTask struct {
 
 // Send a sw checkin request
 func (r *CheckinTask) Send() {
+	log.Println("starting task", r.id, "!")
 	// don't run another request on a closed chan
 	select {
 	case <-r.lock.TryClose():
@@ -60,7 +61,7 @@ func (r *CheckinTask) Send() {
 	canContinue, ok := <-statusMsg.Ok
 
 	if !canContinue || !ok || err != nil {
-		fmt.Println("id:", r.id, "exiting on err:", err)
+		log.Println("id:", r.id, "exiting on err:", err)
 		close(statusMsg.Ok)
 		return
 	}

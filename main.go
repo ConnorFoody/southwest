@@ -17,21 +17,21 @@ func shortTimeFromNow() string {
 }
 
 func main() {
-	layoutStr := "Jan 1, 2016 at 1:00pm (PST)"
+	fmtStr := "Jan 2 15:04:05 -0700 MST 2006"
+	fmt.Println("Now is:", time.Now().Format(fmtStr))
 	fmt.Println("welcome to the SW checkin bomber")
-	fmt.Println("FORMAT:", layoutStr)
-	//fmt.Print("enter time: ")
+	fmt.Println("FORMAT:", fmtStr)
+	fmt.Print("enter time: ")
 
 	// get the input line
 	cmdLine := bufio.NewReader(os.Stdin)
-	/*timeStr, err := cmdLine.ReadString('\n')
+	timeStr, err := cmdLine.ReadString('\n')
 	timeStr = strings.Trim(timeStr, "\n")
 	if err != nil {
 		err = fmt.Errorf("error parsing text \"%s\", error: %s\n", timeStr, err)
 		panic(err)
 	}
-	*/
-	timeStr := shortTimeFromNow()
+
 	fmt.Println("tstr:", timeStr)
 
 	// build sched
@@ -41,7 +41,7 @@ func main() {
 	}
 
 	// for now just use a hardcoded set
-	sched.SetParams(10, 10, 0)
+	sched.SetParams(250, 250, 000)
 
 	// build account
 	account := southwest.Account{}

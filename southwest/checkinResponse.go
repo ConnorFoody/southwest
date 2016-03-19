@@ -3,7 +3,7 @@ package southwest
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -23,14 +23,14 @@ func (cr *checkinResponse) Parse(response *http.Response) {
 	var arbJSON map[string]interface{}
 
 	err := json.Unmarshal(buff.Bytes(), &arbJSON)
-	fmt.Println("checkin json:", buff.String())
+	log.Println("checkin json:", buff.String())
 	if err != nil {
-		fmt.Println("err decoding json:", err)
+		log.Println("err decoding json:", err)
 		return
 	}
 
 	// check that this has flight info
-	cr.ok = arbJSON["output"] != nil
+	_, cr.ok = arbJSON["output"]
 }
 
 func (swr requestHandler) doCheckin(account Account) (
