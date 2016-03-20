@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// HoldLock "pauses" threads until it gets a confirm
+// HoldLock blocks all but one task. If the unblocked task fails then
 type HoldLock struct {
 	lock  chan blaster.RequestStatus
 	pool  chan blaster.RequestStatus
